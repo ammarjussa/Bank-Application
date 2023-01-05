@@ -24,8 +24,4 @@ public class BankAccountController {
         return bankAccountService.createBankAccount(bankAccount);
     }
 
-    @PostMapping("/transaction")
-    public void transaction(@RequestBody String request) {
-        bankAccountService.transaction(request);
-    }
 }

@@ -17,6 +17,5 @@ public class BankAccount {
     private Long id;
     private Customer customer;
     private String accountNumber;
-    private String bankName;
     private double balance;
 }
