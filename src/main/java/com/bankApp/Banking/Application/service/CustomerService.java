@@ -5,6 +5,7 @@ import com.bankApp.Banking.Application.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Optional;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
 public class CustomerService {
     @Autowired
     private CustomerRepository customerRepository;
-    public Long save(Customer customer) {
+    public String save(@RequestBody Customer customer) {
         return customerRepository.save(customer).getUserId();
     }
 
@@ -22,5 +23,9 @@ public class CustomerService {
     }
     public List<Customer> findAll() {
         return customerRepository.findAll();
+    }
+
+    public Customer login(String email, String password) {
+        return customerRepository.findByEmailAndPassword(email, password);
     }
 }

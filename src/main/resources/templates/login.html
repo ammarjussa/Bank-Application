@@ -33,6 +33,36 @@
         </div>
       </div>
     </div>
-    <script src="../static/javascript/loginAction.js"></script>
+   <script>
+     $(document).ready(function () {
+       function loginCustomer() {
+         $('#login-form').submit(function(event) {
+           event.preventDefault();
+           alert('clicked');
+
+           var formData = {
+             'username': $('input[name=username]').val(),
+             'password': $('input[name=password]').val()
+           };
+
+           $.ajax({
+             type: 'POST',
+             url: '/account/login',
+             data: JSON.stringify(formData),
+             dataType: 'json',
+             contentType: "application/json; charset=utf-8",
+             encode: true
+           }).done(function(response) {
+             // Successful login
+             console.log(response);
+           }).fail(function(response) {
+             // Failed login
+             console.error(response);
+           });
+         });
+       }
+       loginCustomer();
+     })
+   </script>
   </body>
 </html>
