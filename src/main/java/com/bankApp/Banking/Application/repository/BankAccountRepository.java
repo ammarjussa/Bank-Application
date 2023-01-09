@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface BankAccountRepository extends MongoRepository<BankAccount, String> {
     Optional<BankAccount> findBankAccountById(Long id);
+
+    Optional<BankAccount> findBankAccountByAccountNumber(String accountNumber);
 }

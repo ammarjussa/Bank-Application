@@ -49,22 +49,15 @@
         <script>
             document.getElementById("createAccountForm").addEventListener("submit", function(event) {
                 event.preventDefault();
-
-                // Get form data
                 const formData = new FormData(this);
-
-                // Send POST request to create account
                 const xhr = new XMLHttpRequest();
                 xhr.open("POST", "/account/signup");
                 xhr.onload = function() {
                     if (xhr.status === 200) {
-                        // Account created successfully
-                        alert('Succesfully created account');
-                        // Navigate to home page or show success message
+                        console.log('Successful');
+                        window.location.href = "/home";
                     } else {
                         console.log("error");
-                        // There was an error creating the account
-                        // Show error message or redirect to error page
                     }
                 };
                 xhr.send(formData);
