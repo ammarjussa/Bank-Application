@@ -22,10 +22,5 @@ public class Customer {
     private String password;
     private String address;
     private String phoneNumber;
-    private BankAccount bankAccount;
-
-    public BankAccount getBankAccount() {
-        return bankAccount;
-    }
 }
 

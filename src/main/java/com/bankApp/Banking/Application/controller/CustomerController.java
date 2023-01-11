@@ -59,9 +59,7 @@ public class CustomerController {
 
         Map<String, String> response = new HashMap<>();
         response.put("name", customer.getName());
-        response.put("address", customer.getAddress());
-        response.put("phone", customer.getPhoneNumber());
-        response.put("email", customer.getEmail());
+        response.put("message", "Login Successful");
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -78,9 +76,9 @@ public class CustomerController {
 }
 
 /*
-* Signup, Login and Logout APIs working.
-* Have to check bank Account creation
-* Figure out how to add bank account details into the customer.
+
+* Have to check bank Account creation. (Working)
+* Load balance API (Change the balance of the bank account).
 * Check transaction api and test it.
 * Other APIs: getTransactionDetails, getBankAccountDetails, getCashATM etc.
 * */
