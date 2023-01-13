@@ -9,4 +9,6 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
     Optional<BankAccount> findBankAccountById(Long id);
 
     Optional<BankAccount> findBankAccountByAccountNumber(String accountNumber);
+
+    Optional<BankAccount> findBankAccountByCustomerUserId(String userId);
 }

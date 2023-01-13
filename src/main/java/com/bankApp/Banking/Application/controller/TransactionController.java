@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/transactions")
 public class TransactionController {
 
@@ -23,103 +24,98 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @Autowired
-    private CustomerService customerService;
-
-    @Autowired
     private BankAccountService bankAccountService;
 
     @GetMapping
-    public List<Transaction> getAllTransactions() {
-        return transactionService.getAllTransactions();
+    public List<Transaction> getAllTransactions(BankAccount account) {
+        return transactionService.getAllTransactionsOfAccount(account);
     }
 
-    @PostMapping
-    public Transaction createTransaction(TransactionRequest request) {
-        return transactionService.createTransaction(request);
+    @PostMapping("/createTransaction")
+    public ResponseEntity<Object> createTransaction(@RequestBody Map<String, String> request, HttpSession session) {
+
+        String receiverAccountNumber = request.get("receiverAccountNumber");
+        if (receiverAccountNumber == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "You must provide the account number of the receiver");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<BankAccount> receiverAccount = bankAccountService.findByAccountNumber(receiverAccountNumber);
+        if (receiverAccount == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Invalid account number");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        String senderAccountNumber = request.get("senderAccountNumber");
+        if (senderAccountNumber == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "You must provide the account number of the sender");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<BankAccount> senderAccount = bankAccountService.findByAccountNumber(receiverAccountNumber);
+        if (senderAccount == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Invalid account number");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+
+        String amountString = request.get("amount");
+        if (amountString == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "You must provide the amount of the transaction");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+        double amount;
+        try {
+            amount = Double.parseDouble(amountString);
+        } catch (NumberFormatException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Invalid amount");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        if (senderAccount.get().getBalance() < amount) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "You do not have sufficient balance to make this transaction");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // Create a new transaction
+        Transaction transaction = new Transaction();
+        transaction.setId(generateId());
+        transaction.setSourceAccount(senderAccount.get());
+        transaction.setDestinationAccount(receiverAccount.get());
+        transaction.setAmount(amount);
+        transaction.setDescription(request.get("description"));
+        transaction.setDate(new Date());
+
+
+        // Update the balance of the sender and receiver
+        senderAccount.get().setBalance(senderAccount.get().getBalance() - amount);
+        receiverAccount.get().setBalance(receiverAccount.get().getBalance() + amount);
+
+        // Save the updated bank accounts to the database
+        bankAccountService.createBankAccount(senderAccount.get());
+        bankAccountService.createBankAccount(receiverAccount.get());
+
+        // Save the transaction to the database
+        transactionService.createTransaction(transaction);
+
+        // Create a response object
+        Map<String, String> response = new HashMap<>();
+        response.put("id", transaction.getId());
+        response.put("senderAccountNumber", transaction.getSourceAccount().getAccountNumber());
+        response.put("receiverAccountNumber", transaction.getDestinationAccount().getAccountNumber());
+        response.put("amount", String.valueOf(transaction.getAmount()));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-//    @PostMapping("/createTransaction")
-//    public ResponseEntity<Object> createTransaction(@RequestBody Map<String, String> request, HttpSession session) {
-//        String id = (String) session.getAttribute("userId");
-//        if (id == null) {
-//            Map<String, String> response = new HashMap<>();
-//            response.put("error", "You must be logged in to create a transaction");
-//            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-//        }
-//
-//        Optional<Customer> customer =  customerService.getCustomerById(id);
-//        if (customer == null) {
-//            Map<String, String> response = new HashMap<>();
-//            response.put("error", "Invalid email or password");
-//            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-//        }
-//
-//        String receiverAccountNumber = request.get("receiverAccountNumber");
-//        if (receiverAccountNumber == null) {
-//            Map<String, String> response = new HashMap<>();
-//            response.put("error", "You must provide the account number of the receiver");
-//            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-//        }
-//
-//        Optional<BankAccount> receiverAccount = bankAccountService.findByAccountNumber(receiverAccountNumber);
-//        if (receiverAccount == null) {
-//            Map<String, String> response = new HashMap<>();
-//            response.put("error", "Invalid account number");
-//            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-//        }
-//
-//        String amountString = request.get("amount");
-//        if (amountString == null) {
-//            Map<String, String> response = new HashMap<>();
-//            response.put("error", "You must provide the amount of the transaction");
-//            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-//        }
-//        int amount;
-//        try {
-//            amount = Integer.parseInt(amountString);
-//        } catch (NumberFormatException e) {
-//            Map<String, String> response = new HashMap<>();
-//            response.put("error", "Invalid amount");
-//            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-//        }
-//
-//        if (customer.getBankAccount().getBalance() < amount) {
-//            Map<String, String> response = new HashMap<>();
-//            response.put("error", "You do not have sufficient balance to make this transaction");
-//            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-//        }
-//
-//        // Create a new transaction
-//        Transaction transaction = new Transaction();
-//        transaction.setId(generateId());
-//        transaction.setSourceAccount(customer.getBankAccount());
-//        transaction.setDestinationAccount(receiverAccount.get());
-//        transaction.setAmount(amount);
-//
-//        // Update the balance of the sender and receiver
-//        customer.getBankAccount().setBalance(customer.getBankAccount().getBalance() - amount);
-//        receiverAccount.setBalance(receiverAccount.getBalance() + amount);
-//
-//        // Save the updated bank accounts to the database
-//        bankAccountService.createBankAccount(customer.getBankAccount());
-//        bankAccountService.createBankAccount(receiverAccount);
-//
-//        // Save the transaction to the database
-//        transactionRepository.save(transaction);
-//
-//        // Create a response object
-//        Map<String, String> response = new HashMap<>();
-//        response.put("id", transaction.getId());
-//        response.put("senderAccountNumber", transaction.getSourceAccount().getAccountNumber());
-//        response.put("receiverAccountNumber", transaction.getDestinationAccount().getAccountNumber());
-//        response.put("amount", String.valueOf(transaction.getAmount()));
-//
-//        // Return the response as a JSON object
-//        return new ResponseEntity<>(response, HttpStatus.OK);
-//    }
-//
-//    private String generateId() {
-//        // Generate a random ID
-//        return UUID.randomUUID().toString();
-//    }
+    private String generateId() {
+        return UUID.randomUUID().toString();
+    }
 }

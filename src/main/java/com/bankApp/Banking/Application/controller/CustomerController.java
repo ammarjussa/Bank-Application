@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/account")
 public class CustomerController {
 
@@ -58,21 +60,43 @@ public class CustomerController {
         session.setAttribute("email", email);
 
         Map<String, String> response = new HashMap<>();
-        response.put("name", customer.getName());
+        response.put("userId", customer.getUserId());
         response.put("message", "Login Successful");
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession session) {
-        if (session.getAttribute("email") == null) {
+    public ResponseEntity<Object> logout(HttpSession session) {
+        System.out.println((String) session.getAttribute("email"));
+        if ((String) session.getAttribute("email") == null) {
             return new ResponseEntity<>("Not logged in", HttpStatus.BAD_REQUEST);
         } else {
             session.invalidate();
             return new ResponseEntity<>("Logged out successfully", HttpStatus.OK);
         }
     }
+
+    @PostMapping("/getCustomer")
+    public ResponseEntity<Object> getCustomer(@RequestBody Map<String, String> request) {
+        String userId = request.get("userId");
+        Optional<Customer> customer = customerService.getCustomerById(userId);
+        System.out.println(customer.get().getEmail());
+        if (customer == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "User not logged in");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        } else {
+            Map<String, String> response = new HashMap<>();
+            response.put("name", customer.get().getName());
+            response.put("email", customer.get().getEmail());
+            response.put("phone", customer.get().getPhoneNumber());
+            response.put("address", customer.get().getAddress());
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+    }
+
 }
 
 /*

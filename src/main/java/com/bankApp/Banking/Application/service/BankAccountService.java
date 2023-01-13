@@ -25,4 +25,8 @@ public class BankAccountService {
     public Optional<BankAccount> findByAccountNumber(String accountNumber) {
         return bankAccountRepository.findBankAccountByAccountNumber(accountNumber);
     }
+
+    public  Optional<BankAccount> findAccountByCustomerUserId(String userId) {
+        return bankAccountRepository.findBankAccountByCustomerUserId(userId);
+    }
 }

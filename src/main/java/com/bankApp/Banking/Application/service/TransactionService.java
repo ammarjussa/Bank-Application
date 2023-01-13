@@ -20,17 +20,11 @@ public class TransactionService {
     @Autowired
     private BankAccountRepository bankAccountRepository;
 
-    public List<Transaction> getAllTransactions() {
-        return transactionRepository.findAll();
+    public List<Transaction> getAllTransactionsOfAccount(BankAccount account) {
+        return transactionRepository.findAllBySourceAccountAndDestinationAccount(account);
     }
 
-    public Transaction createTransaction(TransactionRequest request) {
-        BankAccount sourceAccount = bankAccountRepository.findBankAccountById(request.getSourceAccountId()).get();
-        BankAccount destinationAccount = bankAccountRepository.findBankAccountById(request.getDestinationAccountId()).get();
-        double amount = request.getAmount();
-        String description = request.getDescription();
-
-        Transaction transaction = new Transaction(sourceAccount, destinationAccount, amount, description);
+    public Transaction createTransaction(Transaction transaction) {
         return transactionRepository.save(transaction);
     }
 

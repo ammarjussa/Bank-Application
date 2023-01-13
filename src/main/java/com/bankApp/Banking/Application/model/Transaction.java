@@ -35,4 +35,7 @@ public class Transaction {
         this.description = description;
     }
 
+    public Transaction() {
+
+    }
 }

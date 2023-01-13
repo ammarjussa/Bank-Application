@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/")
 
 public class BankAccountController {
@@ -69,4 +70,49 @@ public class BankAccountController {
         return UUID.randomUUID().toString();
     }
 
+    @PostMapping("/loadBalance")
+    public ResponseEntity<Object> loadBalance(@RequestBody Map<String, String> request) {
+        double amount;
+        try {
+            amount = Double.parseDouble(request.get("balance"));
+        } catch (NumberFormatException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Invalid amount");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<BankAccount> account = bankAccountService.findByAccountNumber(request.get("accountNumber"));
+        if (account == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Invalid account number");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        account.get().setBalance(account.get().getBalance() + amount);
+        bankAccountService.createBankAccount(account.get());
+
+        Map<String, String> response = new HashMap<>();
+        response.put("AccountNumber",account.get().getAccountNumber());
+        response.put("amount", String.valueOf(amount));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/getCustomerAccount")
+    public ResponseEntity<Object> findCustomerAccount(@RequestBody Map<String, String> request) {
+        Optional<BankAccount> account = bankAccountService.findAccountByCustomerUserId(request.get("userId"));
+        if (account == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "No such account");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        } else {
+            Map<String, String> response = new HashMap<>();
+            response.put("accountNumber", account.get().getAccountNumber());
+            response.put("accountType", account.get().getAccountType());
+            response.put("balance", String.valueOf(account.get().getBalance()));
+            response.put("name", account.get().getCustomer().getName());
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+    }
 }
