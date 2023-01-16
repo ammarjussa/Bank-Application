@@ -68,7 +68,6 @@ public class CustomerController {
 
     @PostMapping("/logout")
     public ResponseEntity<Object> logout(HttpSession session) {
-        System.out.println((String) session.getAttribute("email"));
         if ((String) session.getAttribute("email") == null) {
             return new ResponseEntity<>("Not logged in", HttpStatus.BAD_REQUEST);
         } else {
@@ -81,7 +80,6 @@ public class CustomerController {
     public ResponseEntity<Object> getCustomer(@RequestBody Map<String, String> request) {
         String userId = request.get("userId");
         Optional<Customer> customer = customerService.getCustomerById(userId);
-        System.out.println(customer.get().getEmail());
         if (customer == null) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "User not logged in");
@@ -99,12 +97,5 @@ public class CustomerController {
 
 }
 
-/*
-
-* Have to check bank Account creation. (Working)
-* Load balance API (Change the balance of the bank account).
-* Check transaction api and test it.
-* Other APIs: getTransactionDetails, getBankAccountDetails, getCashATM etc.
-* */
 
 

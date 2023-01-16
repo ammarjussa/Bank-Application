@@ -35,23 +35,18 @@ public class BankAccountController {
     }
 
     @PostMapping("/createAccount")
-    public ResponseEntity<Object> createAccount(HttpSession session) {
-        String email = (String) session.getAttribute("email");
-        if (email == null) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "You must be logged in to create a bank account");
-            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-        }
-
+    public ResponseEntity<Object> createAccount(@RequestBody Map<String, String> request) {
         // Find the user's account
-        Optional<Customer> customer = customerService.getCustomerByEmail(email);
-        if (customer == null) {
+        String userId = request.get("userId");
+        String type = request.get("accountType");
+        Optional<Customer> customer = customerService.getCustomerById(userId);
+        if (!customer.isPresent()) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "Invalid email or password");
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
 
-        BankAccount bankAccount = new BankAccount(generateId(), customer.get(), generateAccountNumber(), "savings",0);
+        BankAccount bankAccount = new BankAccount(generateId(), customer.get(), generateAccountNumber(), type,0);
 
         bankAccountService.createBankAccount(bankAccount);
 
@@ -82,7 +77,7 @@ public class BankAccountController {
         }
 
         Optional<BankAccount> account = bankAccountService.findByAccountNumber(request.get("accountNumber"));
-        if (account == null) {
+        if (!account.isPresent()) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "Invalid account number");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -101,7 +96,7 @@ public class BankAccountController {
     @PostMapping("/getCustomerAccount")
     public ResponseEntity<Object> findCustomerAccount(@RequestBody Map<String, String> request) {
         Optional<BankAccount> account = bankAccountService.findAccountByCustomerUserId(request.get("userId"));
-        if (account == null) {
+        if (!account.isPresent()) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "No such account");
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);

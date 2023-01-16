@@ -1,11 +1,8 @@
 package com.bankApp.Banking.Application.controller;
 
 import com.bankApp.Banking.Application.model.BankAccount;
-import com.bankApp.Banking.Application.model.Customer;
 import com.bankApp.Banking.Application.model.Transaction;
-import com.bankApp.Banking.Application.model.TransactionRequest;
 import com.bankApp.Banking.Application.service.BankAccountService;
-import com.bankApp.Banking.Application.service.CustomerService;
 import com.bankApp.Banking.Application.service.TransactionService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,36 +29,33 @@ public class TransactionController {
     }
 
     @PostMapping("/createTransaction")
-    public ResponseEntity<Object> createTransaction(@RequestBody Map<String, String> request, HttpSession session) {
+    public ResponseEntity<Object> createTransaction(@RequestBody Map<String, String> request) {
 
         String receiverAccountNumber = request.get("receiverAccountNumber");
-        if (receiverAccountNumber == null) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "You must provide the account number of the receiver");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
+        String senderAccountNumber = request.get("senderAccountNumber");
 
         Optional<BankAccount> receiverAccount = bankAccountService.findByAccountNumber(receiverAccountNumber);
-        if (receiverAccount == null) {
+        if (receiverAccount.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "Invalid account number");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
-        String senderAccountNumber = request.get("senderAccountNumber");
-        if (senderAccountNumber == null) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "You must provide the account number of the sender");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
-
-        Optional<BankAccount> senderAccount = bankAccountService.findByAccountNumber(receiverAccountNumber);
-        if (senderAccount == null) {
+        Optional<BankAccount> senderAccount = bankAccountService.findByAccountNumber(senderAccountNumber);
+        if (senderAccount.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "Invalid account number");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
+        String name = request.get("name");
+        System.out.println(name);
+        System.out.println(receiverAccount.get().getCustomer().getName());
+        if(!Objects.equals(name, receiverAccount.get().getCustomer().getName())) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Invalid receiver's name");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
 
         String amountString = request.get("amount");
         if (amountString == null) {
@@ -117,5 +111,18 @@ public class TransactionController {
 
     private String generateId() {
         return UUID.randomUUID().toString();
+    }
+
+    @PostMapping("/getAccountTransaction")
+    public List<Transaction> getAccountTransactions(@RequestBody Map<String, String> request) {
+        String accountNumber = request.get("accountNumber");
+        Optional<BankAccount> account = bankAccountService.findByAccountNumber(accountNumber);
+        if (account.isEmpty()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Invalid account number");
+            return null;
+        }
+        List<Transaction> transactions = transactionService.getAllTransactionsOfAccount(account.get());
+        return transactions;
     }
 }
